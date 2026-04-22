@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Create Post</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body style="padding-top: 70px;">
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top px-4">
+    <div class="collapse navbar-collapse justify-content-end">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="/">My Time Line</a></li>
+        <li class="nav-item"><a class="nav-link" href="/profile">My Profile</a></li>
+        <li class="nav-item"><a class="nav-link" href="/create_post">Create Post</a></li>
+        <li class="nav-item"><a class="nav-link" href="/search">Search</a></li>
+        <li class="nav-item"><a class="nav-link" href="/login">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container mt-5 text-center">
+    <h2 class="text-white">Create New Post</h2>
+
+    {% if success %}
+      <div class="alert alert-success mt-4">
+        <strong>Success!</strong> Your post was uploaded.
+      </div>
+      <img src="{{ image_url }}" class="img-fluid rounded shadow mb-3" style="max-width: 400px;">
+      <p class="text-white">{{ caption }}</p>
+      <a href="/create_post" class="btn btn-magenta mt-3">Post Another</a>
+      <div> 
+        <a href="/profile" class="btn btn-outline-light">View My Profile</a>
+      </div>
+      
+    {% elif error %}
+      <div class="alert alert-danger mt-4">
+        <strong>Error:</strong> {{ error }}
+      </div>
+    {% else %}
+      <form action="/create_post" method="post" enctype="multipart/form-data" class="mt-4">
+        <input class="form-control my-2" type="text" name="caption" placeholder="Enter caption..." required>
+        <input class="form-control my-2" type="file" name="image" accept=".jpg,.jpeg,.png" required>
+        <button class="btn btn-magenta mt-3" type="submit">Post</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <script type="module" src="/static/firebase-login.js"></script>
+</body>
+</html>

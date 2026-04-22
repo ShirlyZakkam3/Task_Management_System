@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Instagram | Timeline</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css?v=5">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top px-4">
+        <div class="collapse navbar-collapse justify-content-end">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="/profile">My Profile</a></li>
+            <li class="nav-item"><a class="nav-link" href="/create_post">Create Post</a></li>
+            <li class="nav-item"><a class="nav-link" href="/search">Search</a></li>
+            <li class="nav-item"><a class="nav-link" href="/login">Logout</a></li>
+          </ul>
+        </div>
+      </nav>
+      
+<div class="container mt-5 pt-5 d-flex flex-column align-items-center">
+
+    <h2 class="text-center text-white mb-4">Timeline</h2>
+
+    {% if posts %}
+        <div class="d-flex flex-column align-items-center gap-4" style="max-width: 600px; width: 100%;">
+            {% for post in posts %}
+            <div class="card bg-light shadow w-100">
+                <img src="{{ post['ImageURL']['stringValue'] }}" class="card-img-top" alt="Post Image">
+                <div class="card-body">
+                    <h5 class="card-title text-dark">
+                        {{ post['ProfileName'] if post['ProfileName'] else post['Username']['stringValue'].split('@')[0] }}
+                    </h5>
+
+                    <p class="card-text text-dark">
+                        <strong>Caption:</strong> {{ post['Caption']['stringValue'] }}
+                    </p>
+
+                    <!-- Comment Section -->
+                    <form class="comment-form mt-2" data-postid="{{ post['ImageURL']['stringValue'] }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control comment-input" placeholder="Add a comment..." maxlength="200" required>
+                            <button class="btn btn-magenta" type="submit">Post</button>
+                        </div>
+                    </form>
+
+                    <div class="comment-section mt-2" data-postid="{{ post['ImageURL']['stringValue'] }}"></div>
+                    <button class="btn btn-link show-more-btn text-primary" data-postid="{{ post['ImageURL']['stringValue'] }}" style="display: none;">Show More Comments</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <h4 class="text-white mt-5">No posts to show yet...</h4>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+// Load initial comments
+async function loadComments(postId) {
+    const commentsContainer = document.querySelector(`.comment-section[data-postid="${postId}"]`);
+    const showMoreBtn = document.querySelector(`.show-more-btn[data-postid="${postId}"]`);
+    try {
+        const response = await axios.get(`/get_comments?post_id=${encodeURIComponent(postId)}`);
+        const comments = response.data;
+
+        commentsContainer.innerHTML = '';
+
+        const initialComments = comments.slice(0, 5);
+        for (const comment of initialComments) {
+            const div = document.createElement('div');
+            div.className = "text-dark small mb-1";
+            div.innerHTML = `<strong>${comment.username}</strong>: ${comment.text}`;
+            commentsContainer.appendChild(div);
+        }
+
+        if (comments.length > 5) {
+            showMoreBtn.style.display = 'block';
+            showMoreBtn.onclick = function() {
+                commentsContainer.innerHTML = '';
+                for (const comment of comments) {
+                    const div = document.createElement('div');
+                    div.className = "text-dark small mb-1";
+                    div.innerHTML = `<strong>${comment.username}</strong>: ${comment.text}`;
+                    commentsContainer.appendChild(div);
+                }
+                showMoreBtn.style.display = 'none';
+            };
+        } else {
+            showMoreBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Submit new comment
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".comment-form").forEach(form => {
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const postId = this.dataset.postid;
+            const input = this.querySelector(".comment-input");
+            const text = input.value.trim();
+
+            if (text) {
+                try {
+                    await axios.post("/add_comment", new URLSearchParams({ post_id: postId, text: text }));
+                    input.value = '';
+                    loadComments(postId);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll(".comment-section").forEach(section => {
+        const postId = section.dataset.postid;
+        loadComments(postId);
+    });
+});
+</script>
+
+</body>
+</html>
